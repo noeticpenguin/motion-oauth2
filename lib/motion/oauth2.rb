@@ -31,7 +31,28 @@ module Motion
       request :patch, url, options, &block
     end
 
+    def self.authenticate_client(url, client_id, client_secret, options = {}, &block)
+      BubbleWrap::HTTP.post(url, with_client_credentials(client_id, client_secret, options)) do |raw_response|
+        response = Response.new raw_response
+        block.call(response) if block
+      end
+    end
+
     private
+
+    def self.with_client_credentials(client_id, client_secret, options = {})
+      options[:payload] ||= {}
+      options[:payload].merge!(
+        grant_type: 'client_credentials',
+        client_id: client_id,
+        client_secret: client_secret
+      )
+      options.merge!(
+        grant_type: 'client_credentials',
+        client_id: client_id,
+        client_secret: client_secret
+      )
+    end
 
     def request(method, url, options = {}, &block)
       BubbleWrap::HTTP.send method, url, with_token(options) do |raw_response|
