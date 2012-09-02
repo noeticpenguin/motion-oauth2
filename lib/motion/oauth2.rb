@@ -38,6 +38,13 @@ module Motion
       end
     end
 
+    def self.authenticate_resource_owner(url, client_id, client_secret, username, password, options = {}, &block)
+      BubbleWrap::HTTP.post(url, with_resource_owner_credentials(client_id, client_secret, username, password, options)) do |raw_response|
+        response = Response.new raw_response
+        block.call(response) if block
+      end
+    end
+
     private
 
     def self.with_client_credentials(client_id, client_secret, options = {})
@@ -51,6 +58,24 @@ module Motion
         grant_type: 'client_credentials',
         client_id: client_id,
         client_secret: client_secret
+      )
+    end
+
+    def self.with_resource_owner_credentials(client_id, client_secret, username, password, options = {})
+      options[:payload] ||= {}
+      options[:payload].merge!(
+        grant_type: 'password',
+        client_id: client_id,
+        client_secret: client_secret,
+        username: username,
+        password: password
+      )
+      options.merge!(
+        grant_type: 'client_credentials',
+        client_id: client_id,
+        client_secret: client_secret,
+        username: username,
+        password: password
       )
     end
 
